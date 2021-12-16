@@ -84,11 +84,50 @@ var Gallery = {
   
     },
   
+    pointerControls: function () {
+        if ('pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document) {
+            //assign the API functions for pointer lock based on browser
+            Gallery.canvas.requestPointerLock = Gallery.canvas.requestPointerLock || Gallery.canvas.mozRequestPointerLock || Gallery.canvas.webkitRequestPointerLock;
+            //run this function to escape pointer Lock
+            Gallery.canvas.exitPointerLock = Gallery.canvas.exitPointerLock || Gallery.canvas.mozExitPointerLock || Gallery.canvas.webkitExitPointerLock;
+  
+            document.addEventListener("keydown", function (e) {
+              if (e.keyCode === 102 || e.keyCode === 70) {
+                Gallery.toggleFullscreen();
+                //refer to below event listener:
+                Gallery.canvas.requestPointerLock();
+              }
+            });
+  
+            Gallery.bgMenu.addEventListener("click", function () {
+                Gallery.canvas.requestPointerLock();
+            });
+            Gallery.play.addEventListener("click", function () {
+                Gallery.canvas.requestPointerLock();
+            });
+  
+            //pointer lock state change listener
+            document.addEventListener('pointerlockchange', Gallery.changeCallback, false);
+            document.addEventListener('mozpointerlockchange', Gallery.changeCallback, false);
+            document.addEventListener('webkitpointerlockchange', Gallery.changeCallback, false);
+  
+            document.addEventListener('pointerlockerror', Gallery.errorCallback, false);
+            document.addEventListener('mozpointerlockerror', Gallery.errorCallback, false);
+            document.addEventListener('webkitpointerlockerror', Gallery.errorCallback, false);
+  
+  
+        } else {
+            alert("Your browser does not support the Pointer Lock API");
+        }
+    },
+  
     
   };
   
   Gallery.raycastSetUp();
   Gallery.boot();
+  Gallery.pointerControls();
+  
   
   
   
