@@ -206,6 +206,120 @@ var Gallery = {
         });
     },
   
+    create: function () {
+      //let there be light!
+      Gallery.worldLight = new THREE.AmbientLight(0xffffff);
+      Gallery.scene.add(Gallery.worldLight);
+  
+      Gallery.textureLoader.load('./asset/floor-pattern.jpg', function (texture) {
+          texture.wrapS = THREE.RepeatWrapping;
+          texture.wrapT = THREE.RepeatWrapping;
+          texture.repeat.set(24, 24);
+  
+          Gallery.floorMaterial = new THREE.MeshPhongMaterial({ map: texture });
+          Gallery.floor = new THREE.Mesh(new THREE.PlaneGeometry(45, 45), Gallery.floorMaterial);
+  
+          Gallery.floor.rotation.x = Math.PI / 2;
+          Gallery.floor.rotation.y = Math.PI;
+          Gallery.scene.add(Gallery.floor);
+      }, undefined, function (err) { console.error(err) });
+  
+      //Create the walls////
+      Gallery.wallGroup = new THREE.Group();
+      Gallery.scene.add(Gallery.wallGroup);
+  
+      Gallery.textureLoader.load('./asset/wall-texture2.jpeg',
+        function (texture) {
+          texture.wrapS = THREE.RepeatWrapping;
+          texture.wrapT = THREE.RepeatWrapping;
+          texture.repeat.set(5, 5);
+  
+          Gallery.wallMaterial = new THREE.MeshLambertMaterial({ map: texture });
+  
+          Gallery.wall1 = new THREE.Mesh(new THREE.BoxGeometry(40, 6, 0.001), Gallery.wallMaterial);
+          Gallery.wall2 = new THREE.Mesh(new THREE.BoxGeometry(6, 6, 0.001), Gallery.wallMaterial);
+          Gallery.wall3 = new THREE.Mesh(new THREE.BoxGeometry(6, 6, 0.001), Gallery.wallMaterial);
+          Gallery.wall4 = new THREE.Mesh(new THREE.BoxGeometry(40, 6, 0.001), Gallery.wallMaterial);
+  
+          Gallery.wallGroup.add(Gallery.wall1, Gallery.wall2, Gallery.wall3, Gallery.wall4);
+          Gallery.wallGroup.position.y = 3;
+  
+          Gallery.wall1.position.z = -3;
+          Gallery.wall2.position.x = -20;
+          Gallery.wall2.rotation.y = Math.PI / 2;
+          Gallery.wall3.position.x = 20;
+          Gallery.wall3.rotation.y = -Math.PI / 2;
+          Gallery.wall4.position.z = 3;
+          Gallery.wall4.rotation.y = Math.PI;
+  
+          for (var i = 0; i < Gallery.wallGroup.children.length; i++) {
+              Gallery.wallGroup.children[i].BBox = new THREE.Box3();
+              Gallery.wallGroup.children[i].BBox.setFromObject(Gallery.wallGroup.children[i]);
+          }
+        },
+        undefined,
+        function (err) { console.error(err); }
+        );
+  
+        Gallery.textureLoader.load('./asset/ceil.jpg',
+        function (texture) {
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(5, 5);
+  
+            Gallery.ceilMaterial = new THREE.MeshLambertMaterial({ map: texture });
+  
+            Gallery.ceil = new THREE.Mesh(new THREE.PlaneGeometry(40, 6), Gallery.ceilMaterial);
+            Gallery.ceil.position.y = 6;
+            Gallery.ceil.rotation.x = Math.PI / 2;
+  
+            Gallery.scene.add(Gallery.ceil);
+        },
+        undefined,
+        function (err) { console.error(err); }
+        );
+  
+        Gallery.artGroup = new THREE.Group();
+  
+        Gallery.num_of_paintings = 30;
+        Gallery.paintings = [];
+        for (var i = 0; i < Gallery.num_of_paintings; i++) {
+          (function (index) {
+            var artwork = new Image();
+            var ratiow = 0;
+            var ratioh = 0;
+  
+            var source = './images/' + (index).toString() + '.jpg';
+            artwork.src = source;
+             artwork.height = 350;
+             artwork.width = 450;
+  
+            //var texture = THREE.ImageUtils.loadTexture(artwork.src);
+            var texture = Gallery.textureLoader.load(artwork.src);
+            texture.minFilter = THREE.LinearFilter;
+            var img = new THREE.MeshBasicMaterial({ map: texture });
+  
+            artwork.onload = function () {
+                ratiow = artwork.width / 300;
+                ratioh = artwork.height / 300;
+                // plane for artwork
+                var plane = new THREE.Mesh(new THREE.PlaneGeometry(ratiow, ratioh), img); //width, height
+                plane.overdraw = true;
+                if (index <= Math.floor(Gallery.num_of_paintings / 2) - 1) //bottom half
+                {
+                plane.position.set(2.5 * index - 17.5, 2, -2.96); //y and z kept constant
+                }else {
+                plane.position.set(2.5 * index - 55, 2, 2.96);
+                plane.rotation.y = Math.PI;
+                }
+  
+                Gallery.scene.add(plane);
+                Gallery.paintings.push(plane);
+            }
+            // img.map.needsUpdate = true; //ADDED
+          }(i))
+        }
+    },
     
   };
   
@@ -213,6 +327,7 @@ var Gallery = {
   Gallery.boot();
   Gallery.pointerControls();
   Gallery.movement();
+  Gallery.create();
   
   
   
