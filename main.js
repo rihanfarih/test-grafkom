@@ -121,13 +121,31 @@ var Gallery = {
         }
     },
   
+    changeCallback: function (event) {
+      if (document.pointerLockElement === Gallery.canvas || document.mozPointerLockElement === Gallery.canvas || document.webkitPointerLockElement === Gallery.canvas) {
+        Gallery.controls.enabled = true;
+        Gallery.menu.className += " hide";
+        Gallery.bgMenu.className += " hide";
+        document.addEventListener("mousemove", Gallery.moveCallback, false);
+        Gallery.sound.play();
+      } else {
+          Gallery.sound.pause();
+        Gallery.controls.enabled = false;
+        Gallery.menu.className = Gallery.menu.className.replace(/(?:^|\s)hide(?!\S)/g, '');
+        Gallery.bgMenu.className = Gallery.bgMenu.className.replace(/(?:^|\s)hide(?!\S)/g, '');
+        document.removeEventListener("mousemove", Gallery.moveCallback, false);
+      }
+    },
+  
+    errorCallback: function (event) {
+        alert("Pointer Lock Failed");
+    },
     
   };
   
   Gallery.raycastSetUp();
   Gallery.boot();
   Gallery.pointerControls();
-  
   
   
   
