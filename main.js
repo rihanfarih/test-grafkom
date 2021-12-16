@@ -320,7 +320,104 @@ var Gallery = {
           }(i))
         }
     },
-    
+    render: function () {
+      requestAnimationFrame(Gallery.render);
+  
+      if (Gallery.controls.enabled === true) {
+        Gallery.initialRender = false;
+        var currentTime = performance.now(); //returns time in milliseconds
+        //accurate to the thousandth of a millisecond
+        //want to get the most accurate and smallest change in time
+        var delta = (currentTime - Gallery.prevTime) / 1000;
+  
+        //there's a constant deceleration that needs to be applied
+        //only when the object is currently in motion
+        Gallery.moveVelocity.x -= Gallery.moveVelocity.x * 10.0 * delta;
+        //for now
+        Gallery.moveVelocity.y -= 9.8 * 7.0 * delta; // m/s^2 * kg * delta Time
+        Gallery.moveVelocity.z -= Gallery.moveVelocity.z * 10.0 * delta;
+  
+        Gallery.textureAnimation.update(1000 * delta);
+  
+        //need to apply velocity when keys are being pressed
+        if (Gallery.moveForward) {
+          Gallery.moveVelocity.z -= 38.0 * delta;
+        }
+        if (Gallery.moveBackward) {
+          Gallery.moveVelocity.z += 38.0 * delta;
+        }
+        if (Gallery.moveLeft) {
+          Gallery.moveVelocity.x -= 38.0 * delta;
+        }
+        if (Gallery.moveRight) {
+          Gallery.moveVelocity.x += 38.0 * delta;
+        }
+  
+        Gallery.controls.getObject().translateX(Gallery.moveVelocity.x * delta);
+        Gallery.controls.getObject().translateY(Gallery.moveVelocity.y * delta);
+        Gallery.controls.getObject().translateZ(Gallery.moveVelocity.z * delta);
+  
+        if (Gallery.controls.getObject().position.y < 1.75) {
+           Gallery.jump = true;
+           Gallery.moveVelocity.y = 0;
+           Gallery.controls.getObject().position.y = 1.75;
+        }
+  
+        if (Gallery.controls.getObject().position.z < -2) {
+          Gallery.controls.getObject().position.z = -2;
+        }
+        if (Gallery.controls.getObject().position.z > 2) {
+          Gallery.controls.getObject().position.z = 2;
+        }
+        if (Gallery.controls.getObject().position.x < -18) {
+          Gallery.controls.getObject().position.x = -18;
+        }
+        if (Gallery.controls.getObject().position.x > 18) {
+          Gallery.controls.getObject().position.x = 18;
+        }
+  
+        Gallery.raycaster.setFromCamera(Gallery.mouse.clone(), Gallery.camera);
+        //calculate objects interesting ray
+        Gallery.intersects = Gallery.raycaster.intersectObjects(Gallery.paintings);
+  
+        if(Gallery.lastIntersectObj !== undefined)
+            Gallery.lastIntersectObj.material.color.set(0xffffff);
+  
+        if (Gallery.intersects.length !== 0) {
+          //console.log(Gallery.intersects[0]);
+          Gallery.lastIntersectObj = Gallery.intersects[0].object;
+          Gallery.intersects[0].object.material.color.set(0xc2d9f0);
+        }
+  
+        for (var i = 0; i < Gallery.wallGroup.children.length; i++) {
+          if (Gallery.user.BBox.intersectsBox(Gallery.wallGroup.children[i].BBox)) {
+              Gallery.user.BBox.setFromObject(Gallery.user);
+          } else {
+              Gallery.wallGroup.children[i].material.color.set(0xffffff);
+          }
+        }
+        
+        Gallery.pastX = Gallery.controls.getObject().position.x;
+        Gallery.pastZ = Gallery.controls.getObject().position.z;
+  
+        Gallery.user.BBox.setFromObject(Gallery.user);
+  
+        Gallery.prevTime = currentTime;
+  
+        Gallery.renderer.render(Gallery.scene, Gallery.camera);
+      } else {
+        //reset delta time, so when unpausing, time elapsed during pause
+        //doesn't affect any variables dependent on time.
+        Gallery.prevTime = performance.now();
+      }
+  
+      if (Gallery.initialRender === true) {
+        for (var i = 0; i < Gallery.wallGroup.children.length; i++) {
+          Gallery.wallGroup.children[i].BBox.setFromObject(Gallery.wallGroup.children[i]);
+        }
+        Gallery.renderer.render(Gallery.scene, Gallery.camera);
+      }
+    }
   };
   
   Gallery.raycastSetUp();
@@ -328,7 +425,7 @@ var Gallery = {
   Gallery.pointerControls();
   Gallery.movement();
   Gallery.create();
-  
+  Gallery.render();
   
   
   
