@@ -10,11 +10,85 @@ var Gallery = {
       Gallery.mouse.y = 0; //(0.5) * 2 + 1;
       Gallery.mouse.z = 0.0001;
     },
+    boot: function () {
+      //renderer time delta
+      Gallery.prevTime = performance.now();
+  
+      Gallery.initialRender = true;
+      
+      Gallery.scene.fog = new THREE.FogExp2(0x666666, 0.025);
+  
+      Gallery.renderer.setSize(window.innerWidth, window.innerHeight);
+      Gallery.renderer.setClearColor(0xffffff, 1);
+      document.body.appendChild(Gallery.renderer.domElement);
+  
+      Gallery.userBoxGeo = new THREE.BoxGeometry(2, 1, 2);
+      Gallery.userBoxMat = new THREE.MeshBasicMaterial({ color: 0xeeee99, wireframe: true });
+      Gallery.user = new THREE.Mesh(Gallery.userBoxGeo, Gallery.userBoxMat);
+  
+      var texture = Gallery.textureLoader.load('./asset/volume.png');
+      texture.minFilter = THREE.LinearFilter;
+      Gallery.textureAnimation = new TextureAnimator(texture, 5, 6, 30, 60);
+      var img = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+  
+      Gallery.volumeIcon = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), img);
+      Gallery.volumeIcon.overdraw = true;
+  
+      Gallery.volumeIconLeftWall = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), img);
+      Gallery.volumeIconLeftWall.overdraw = true;
+      var mS = (new THREE.Matrix4()).identity();
+      mS.elements[0] = -1;
+      mS.elements[10] = -1;
+      Gallery.volumeIconLeftWall.geometry.applyMatrix(mS);
+  
+      //invisible since this will solely be used to determine the size
+      //of the bounding box of our boxcollider for the user
+      Gallery.user.visible = false;
+  
+      //making Bounding Box and HelperBox
+      //boundingbox is used for collisions, Helper box just makes it easier to debug 
+      Gallery.user.BBox = new THREE.Box3();
+  
+      //make our collision object a child of the camera
+      Gallery.camera.add(Gallery.user);
+  
+      Gallery.controls = new THREE.PointerLockControls(Gallery.camera);
+      Gallery.scene.add(Gallery.controls.getObject());
+  
+      Gallery.pastX = Gallery.controls.getObject().position.x;
+      Gallery.pastZ = Gallery.controls.getObject().position.z;
+  
+      Gallery.canvas = document.querySelector('canvas');
+      Gallery.canvas.className = "gallery";
+  
+      //Clicking on either of these will start the game
+      Gallery.bgMenu = document.getElementById('background_menu');
+      Gallery.play = document.getElementById('play_button');
+  
+      //enabling/disabling menu based on pointer controls
+      Gallery.menu = document.getElementById("menu");
+  
+      //only when pointer is locked will translation controls be allowed: Gallery.controls.enabled
+      Gallery.moveVelocity = new THREE.Vector3();
+      Gallery.jump = true;
+      Gallery.moveForward = false;
+      Gallery.moveBackward = false;
+      Gallery.moveLeft = false;
+      Gallery.moveRight = false;
+  
+      window.addEventListener('resize', function () {
+          Gallery.renderer.setSize(window.innerWidth, window.innerHeight);
+          Gallery.camera.aspect = window.innerWidth / window.innerHeight;
+          Gallery.camera.updateProjectionMatrix();
+      });
+  
+    },
+  
     
   };
   
   Gallery.raycastSetUp();
-  
+  Gallery.boot();
   
   
   
