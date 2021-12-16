@@ -168,12 +168,52 @@ var Gallery = {
           }
         }
     },
-   
+    movement: function () {
+        document.addEventListener("keydown", function (e) {
+            if (e.keyCode === 87 || e.keyCode === 38) { //w or UP
+                Gallery.moveForward = true;
+            }
+            else if (e.keyCode === 65 || e.keyCode === 37) { //A or LEFT
+                Gallery.moveLeft = true;
+            }
+            else if (e.keyCode === 83 || e.keyCode === 40) { //S or DOWN 
+                Gallery.moveBackward = true;
+            }
+            else if (e.keyCode === 68 || e.keyCode === 39) { //D or RIGHT
+                Gallery.moveRight = true;
+            }
+            else if (e.keyCode === 32) { //Spacebar
+                if (Gallery.jump) {
+                    Gallery.moveVelocity.y += 17;
+                    Gallery.jump = false;
+                }
+            }
+        });
+  
+        document.addEventListener("keyup", function (e) {
+            if (e.keyCode === 87 || e.keyCode === 38) { //w or UP
+                Gallery.moveForward = false;
+            }
+            else if (e.keyCode === 65 || e.keyCode === 37) { //A or LEFT
+                Gallery.moveLeft = false;
+            }
+            else if (e.keyCode === 83 || e.keyCode === 40) { //S or DOWN 
+                Gallery.moveBackward = false;
+            }
+            else if (e.keyCode === 68 || e.keyCode === 39) { //D or RIGHT
+                Gallery.moveRight = false;
+            }
+        });
+    },
+  
+    
   };
   
   Gallery.raycastSetUp();
   Gallery.boot();
   Gallery.pointerControls();
+  Gallery.movement();
+  
   
   
   
