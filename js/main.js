@@ -206,10 +206,16 @@ var Gallery = {
       });
   },
 
+
   create: function () {
+    Gallery.axesHelper = new THREE.AxesHelper( 3 );
+    Gallery.scene.add( Gallery.axesHelper );
+
     //let there be light!
-    Gallery.worldLight = new THREE.AmbientLight(0xffffff);
+    Gallery.worldLight = new THREE.AmbientLight(0xffffff, 0.8);
     Gallery.scene.add(Gallery.worldLight);
+
+    
 
     Gallery.textureLoader.load('./asset/floor-pattern.jpg', function (texture) {
         texture.wrapS = THREE.RepeatWrapping;
@@ -224,17 +230,21 @@ var Gallery = {
         Gallery.scene.add(Gallery.floor);
     }, undefined, function (err) { console.error(err) });
 
-    //Create the walls////
+    //Create the walls//
+
     Gallery.wallGroup = new THREE.Group();
     Gallery.scene.add(Gallery.wallGroup);
 
-    Gallery.textureLoader.load('./asset/wall-texture2.jpeg',
+    Gallery.textureLoader.load('./asset/opwall-texture.png',
       function (texture) {
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(5, 5);
+        texture.repeat.set(15, 5);
 
-        Gallery.wallMaterial = new THREE.MeshLambertMaterial({ map: texture });
+        var normalTextureWall = THREE.ImageUtils.loadTexture('./asset/opwall-texture-normal.png');
+        var heightTextureWall = THREE.ImageUtils.loadTexture('./asset/opwall-texture-height.png')
+
+        Gallery.wallMaterial = new THREE.MeshPhongMaterial({ map: texture, normalMap: normalTextureWall, heightMap: heightTextureWall});
 
         Gallery.wall1 = new THREE.Mesh(new THREE.BoxGeometry(40, 6, 0.001), Gallery.wallMaterial);
         Gallery.wall2 = new THREE.Mesh(new THREE.BoxGeometry(6, 6, 0.001), Gallery.wallMaterial);
@@ -251,6 +261,37 @@ var Gallery = {
         Gallery.wall3.rotation.y = -Math.PI / 2;
         Gallery.wall4.position.z = 3;
         Gallery.wall4.rotation.y = Math.PI;
+
+        for (var i = 0; i < Gallery.wallGroup.children.length; i++) {
+            Gallery.wallGroup.children[i].BBox = new THREE.Box3();
+            Gallery.wallGroup.children[i].BBox.setFromObject(Gallery.wallGroup.children[i]);
+        }
+      },
+      undefined,
+      function (err) { console.error(err); }
+  	);
+
+    Gallery.textureLoader.load('./asset/opwall-texture.png',
+      function (texture) {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(2, 5);
+
+        var normalTextureWall = THREE.ImageUtils.loadTexture('./asset/opwall-texture-normal.png');
+        var heightTextureWall = THREE.ImageUtils.loadTexture('./asset/opwall-texture-height.png')
+
+        Gallery.wallMaterial = new THREE.MeshPhongMaterial({ map: texture, normalMap: normalTextureWall, heightMap: heightTextureWall});
+
+        Gallery.wall2 = new THREE.Mesh(new THREE.BoxGeometry(6, 6, 0.001), Gallery.wallMaterial);
+        Gallery.wall3 = new THREE.Mesh(new THREE.BoxGeometry(6, 6, 0.001), Gallery.wallMaterial);
+
+        Gallery.wallGroup.add(Gallery.wall1, Gallery.wall2, Gallery.wall3, Gallery.wall4);
+        Gallery.wallGroup.position.y = 3;
+
+        Gallery.wall2.position.x = -20;
+        Gallery.wall2.rotation.y = Math.PI / 2;
+        Gallery.wall3.position.x = 20;
+        Gallery.wall3.rotation.y = -Math.PI / 2;
 
         for (var i = 0; i < Gallery.wallGroup.children.length; i++) {
             Gallery.wallGroup.children[i].BBox = new THREE.Box3();
@@ -283,21 +324,36 @@ var Gallery = {
 
 	  Gallery.num_of_paintings = 30;
 	  Gallery.paintings = [];
+
 	  for (var i = 0; i < Gallery.num_of_paintings; i++) {
 	    (function (index) {
+
+        Gallery.spotLight = new THREE.SpotLight( 0xffffff , 0.7);
+        Gallery.spotLight.angle = 0.25;
+        Gallery.spotLight.penumbra = 0.5;
+        if(index <= Math.floor(Gallery.num_of_paintings/2)-1){
+          Gallery.spotLight.position.set( 5 * index -18, 5, -2 );
+          Gallery.spotLight.target.position.set(5 * index -18, -1, 8);
+        } else{
+          Gallery.spotLight.position.set(5 * index -93, 5, 2 );
+          Gallery.spotLight.target.position.set(5 * index -93, -1, -8);
+        }
+
+        Gallery.scene.add( Gallery.spotLight, Gallery.spotLight.target );
+
 	      var artwork = new Image();
 	      var ratiow = 0;
 	      var ratioh = 0;
 
 	      var source = './images/' + (index).toString() + '.jpg';
 	      artwork.src = source;
-	       artwork.height = 350;
-	       artwork.width = 450;
+	      // artwork.height = 350;
+	      // artwork.width = 450;
 
 	      //var texture = THREE.ImageUtils.loadTexture(artwork.src);
 	      var texture = Gallery.textureLoader.load(artwork.src);
 	      texture.minFilter = THREE.LinearFilter;
-	      var img = new THREE.MeshBasicMaterial({ map: texture });
+	      var img = new THREE.MeshPhongMaterial({ map: texture });
 
 	      artwork.onload = function () {
 	          ratiow = artwork.width / 300;
@@ -307,9 +363,9 @@ var Gallery = {
 	          plane.overdraw = true;
 	          if (index <= Math.floor(Gallery.num_of_paintings / 2) - 1) //bottom half
 	          {
-              plane.position.set(2.5 * index - 17.5, 2, -2.96); //y and z kept constant
+              plane.position.set(5 * index -18, 2, -2.96); //y and z kept constant
 	          }else {
-              plane.position.set(2.5 * index - 55, 2, 2.96);
+              plane.position.set(5 * index -93, 2, 2.96);
               plane.rotation.y = Math.PI;
 	          }
 
